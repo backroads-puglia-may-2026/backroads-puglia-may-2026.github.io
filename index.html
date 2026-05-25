@@ -120,6 +120,21 @@ sitemap: false
     }
     .photo-dot:hover { transform: scale(1.6); }
 
+    .place-marker {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: #fff; border: 1.5px solid #333;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; line-height: 1; cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .place-marker:hover { transform: scale(1.15); }
+    .leaflet-popup-content { margin: 10px 14px; font-size: 13px; line-height: 1.4; }
+    .leaflet-popup-content .place-name { font-weight: 600; margin-bottom: 2px; }
+    .leaflet-popup-content .place-meta { color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+    .leaflet-popup-content a { color: var(--accent); text-decoration: none; }
+    .leaflet-popup-content a:hover { text-decoration: underline; }
+
     /* Polish Leaflet's default chrome */
     .leaflet-container { background: #eef2f4; font: inherit; }
     .leaflet-control-zoom a {
@@ -214,7 +229,9 @@ sitemap: false
 
   let routesLayer = L.layerGroup().addTo(map);
   let markersLayer = L.layerGroup().addTo(map);
+  let placesLayer = L.layerGroup().addTo(map);
   let allPhotos = [];
+  let allPlaces = [];
   let allRoutes = null;
   let activeDay = 'all';
   let currentPhotoIndex = 0;
@@ -231,17 +248,28 @@ sitemap: false
   };
 
   async function loadData() {
-    const [routesRes, photosRes] = await Promise.all([
+    const [routesRes, photosRes, placesRes] = await Promise.all([
       fetch('data/routes.json').catch(() => null),
-      fetch('data/photos.json').catch(() => null)
+      fetch('data/photos.json').catch(() => null),
+      fetch('data/places.json').catch(() => null)
     ]);
     allRoutes = routesRes && routesRes.ok ? await routesRes.json() : { type: 'FeatureCollection', features: [] };
     allPhotos = photosRes && photosRes.ok ? await photosRes.json() : [];
+    allPlaces = placesRes && placesRes.ok ? await placesRes.json() : [];
 
     dayGroups = buildDayGroups(allRoutes);
     buildDayList();
     render();
     fitMapToData();
+  }
+
+  const PLACE_ICON = {
+    hotel: '🏨', restaurant: '🍽️', cafe: '☕', sight: '🏛️',
+    viewpoint: '👀', shop: '🛍️', bar: '🍷', default: '📍'
+  };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   // ---- Day aggregation -------------------------------------------------------
@@ -350,6 +378,7 @@ sitemap: false
 
     routesLayer.clearLayers();
     markersLayer.clearLayers();
+    placesLayer.clearLayers();
 
     const overview = activeDay === 'all';
     const features = (allRoutes.features || []).filter(f =>
@@ -386,6 +415,30 @@ sitemap: false
       const marker = L.marker([photo.lat, photo.lng], { icon });
       marker.on('click', () => openModal(idx));
       marker.addTo(markersLayer);
+    });
+
+    // ---- Places (hotels, restaurants, sights) --------------------------------
+    const visiblePlaces = (allPlaces || []).filter(p =>
+      p.lat != null && p.lng != null && (overview || p.day == null || p.day === activeDay)
+    );
+    visiblePlaces.forEach(place => {
+      const emoji = PLACE_ICON[place.type] || PLACE_ICON.default;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="place-marker" title="${escapeHtml(place.name)}">${emoji}</div>`,
+        iconSize: [26, 26], iconAnchor: [13, 13]
+      });
+      const meta = [];
+      if (place.type) meta.push(escapeHtml(place.type));
+      if (place.day != null) meta.push('Day ' + place.day);
+      const popup =
+        `<div class="place-name">${escapeHtml(place.name)}</div>` +
+        (meta.length ? `<div class="place-meta">${meta.join(' · ')}</div>` : '') +
+        (place.description ? `<div>${escapeHtml(place.description)}</div>` : '') +
+        (place.url ? `<div><a href="${escapeHtml(place.url)}" target="_blank" rel="noopener">Open in Google Maps &rarr;</a></div>` : '');
+      L.marker([place.lat, place.lng], { icon, zIndexOffset: 500 })
+        .bindPopup(popup, { offset: [0, -8] })
+        .addTo(placesLayer);
     });
 
     renderGrid();
@@ -555,6 +608,11 @@ sitemap: false
   function fitMapToData() {
     const bounds = L.latLngBounds([]);
     visiblePhotos.forEach(p => { if (p.lat != null && p.lng != null) bounds.extend([p.lat, p.lng]); });
+    (allPlaces || []).forEach(p => {
+      if (p.lat == null || p.lng == null) return;
+      if (activeDay !== 'all' && p.day != null && p.day !== activeDay) return;
+      bounds.extend([p.lat, p.lng]);
+    });
     (allRoutes.features || [])
       .filter(f => activeDay === 'all' || (f.properties && f.properties.day === activeDay))
       .forEach(f => {
