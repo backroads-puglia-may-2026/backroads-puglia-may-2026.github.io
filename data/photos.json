@@ -1,13 +1,5 @@
 [
   {
-    "src": "photos/9ecc2b5d-fc47-4300-9922-ac4345a16151.jpg",
-    "thumb": "thumbs/9ecc2b5d-fc47-4300-9922-ac4345a16151.jpg",
-    "datetime": null,
-    "lat": null,
-    "lng": null,
-    "gps_source": null
-  },
-  {
     "src": "photos/20260524_061326_536E0E.jpg",
     "thumb": "thumbs/20260524_061326_536E0E.jpg",
     "datetime": "2026-05-17T11:16:17",
@@ -239,6 +231,15 @@
     "lat": 40.023761111111114,
     "lng": 18.434077777777777,
     "gps_source": "exif",
+    "day": 2
+  },
+  {
+    "src": "photos/9ecc2b5d-fc47-4300-9922-ac4345a16151.jpg",
+    "thumb": "thumbs/9ecc2b5d-fc47-4300-9922-ac4345a16151.jpg",
+    "datetime": "2026-05-18T17:28:48",
+    "lat": null,
+    "lng": null,
+    "gps_source": null,
     "day": 2
   },
   {

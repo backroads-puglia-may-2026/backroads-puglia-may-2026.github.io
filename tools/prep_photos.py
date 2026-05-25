@@ -104,6 +104,48 @@ def extract_meta(path):
     return {"datetime": dt_iso, "lat": lat, "lng": lng, "_img": img}
 
 
+def read_xmp_datetime(photo_path, photo_tz):
+    """If a sibling <stem>.xmp file exists, parse a creation datetime from it.
+
+    Returns a tz-naive ISO string in `photo_tz` (matching the format used for
+    EXIF datetimes), or None.
+
+    Looks for <photoshop:DateCreated>, <xmp:CreateDate>, or <exif:DateTimeOriginal>.
+    XMP datetimes commonly carry a timezone offset (e.g. `-04:00`). When present,
+    the value is converted to `photo_tz` before being stored, so day numbering
+    stays consistent with EXIF-based photos.
+    """
+    xmp = photo_path.with_suffix(".xmp")
+    if not xmp.exists():
+        xmp = photo_path.parent / (photo_path.stem + ".xmp")
+        if not xmp.exists():
+            return None
+    try:
+        text = xmp.read_text(errors="ignore")
+    except OSError:
+        return None
+    import re
+    pat = re.compile(r"(?:photoshop:DateCreated|xmp:CreateDate|exif:DateTimeOriginal)>([^<]+)<")
+    m = pat.search(text)
+    if not m:
+        return None
+    raw = m.group(1).strip()
+    # Normalize "Z" → "+00:00" so fromisoformat accepts it (Python ≥3.7)
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        # Some XMP files use "YYYY:MM:DD HH:MM:SS" — try that too
+        try:
+            dt = datetime.strptime(raw, "%Y:%m:%d %H:%M:%S")
+        except ValueError:
+            return None
+    if dt.tzinfo is None:
+        # No TZ in XMP — treat as already in photo_tz
+        return dt.isoformat()
+    # Convert to photo_tz local wall-clock, drop tzinfo to match EXIF format
+    return dt.astimezone(photo_tz).replace(tzinfo=None).isoformat()
+
+
 def load_gpx_timeline(gpx_dir):
     """Read all GPX files, return a list of (utc_datetime, lat, lng) sorted by time."""
     points = []
@@ -206,11 +248,10 @@ def main():
     if any(p.suffix.lower() in {".heic", ".heif"} for p in files) and pillow_heif is None:
         sys.exit("HEIC files detected. Install pillow-heif:  pip install pillow-heif")
 
+    photo_tz = parse_tz_offset(args.photo_tz)
     gpx_points = []
-    photo_tz = None
     if args.gpx_dir:
         gpx_points = load_gpx_timeline(args.gpx_dir)
-        photo_tz = parse_tz_offset(args.photo_tz)
         print(f"Loaded {len(gpx_points)} GPX track points for time-based lookup (tz {args.photo_tz})\n")
 
     records = []
@@ -224,6 +265,14 @@ def main():
         except Exception as e:
             print(f"    skipped ({e})")
             continue
+
+        # If EXIF had no datetime, look for an XMP sidecar (some shared photos
+        # have EXIF stripped but keep an XMP file alongside)
+        if meta["datetime"] is None:
+            xmp_dt = read_xmp_datetime(src, photo_tz)
+            if xmp_dt:
+                meta["datetime"] = xmp_dt
+                print(f"    datetime recovered from XMP sidecar: {xmp_dt}")
 
         out_name = src.stem + ".jpg"
         if out_name in seen_names:
