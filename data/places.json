@@ -1,10 +1,90 @@
 [
   {
+    "name": "Palazzo Ducale Venturi",
+    "type": "hotel",
+    "lat": 40.0898438,
+    "lng": 18.4194393,
+    "days": [1, 2],
+    "url": "https://maps.app.goo.gl/RYAdPNokcM7tWxY38"
+  },
+  {
     "name": "Masseria Torre Coccaro",
     "type": "hotel",
     "lat": 40.8632316,
     "lng": 17.3868465,
-    "day": 3,
+    "days": [3, 4],
     "url": "https://www.google.com/maps/place/Masseria+TORRE+COCCARO/@40.8632356,17.3842716,17z/data=!4m9!3m8!1s0x1346497d11ff8cc7:0xa690d2ce424407e5!5m2!4m1!1i2!8m2!3d40.8632316!4d17.3868465!16s%2Fg%2F1tjcrmr0"
+  },
+  {
+    "name": "Sextantio Le Grotte Della Civita",
+    "type": "hotel",
+    "lat": 40.6676361,
+    "lng": 16.6118504,
+    "days": [5],
+    "url": "https://maps.app.goo.gl/DgHziBRaTBEgDofA9"
+  },
+  {
+    "name": "Le Stanzie",
+    "type": "restaurant",
+    "lat": 40.0427862,
+    "lng": 18.2138445,
+    "days": [1],
+    "url": "https://maps.app.goo.gl/bX5iB5NHiXRJhPew6"
+  },
+  {
+    "name": "Masseria Marangelli",
+    "type": "restaurant",
+    "lat": 40.1287973,
+    "lng": 18.3881429,
+    "days": [2],
+    "url": "https://maps.app.goo.gl/K2jVRbrtxm4rjHQo7"
+  },
+  {
+    "name": "Taverna della Gelosia",
+    "type": "restaurant",
+    "lat": 40.734104,
+    "lng": 17.5798426,
+    "days": [3],
+    "url": "https://maps.app.goo.gl/bmcqsnShx9M1drMZA"
+  },
+  {
+    "name": "Baccanti",
+    "type": "restaurant",
+    "lat": 40.6656417,
+    "lng": 16.6124305,
+    "days": [5],
+    "url": "https://maps.app.goo.gl/XXjfBe59Z8Mj94NAA"
+  },
+  {
+    "name": "Frantoio Cipa agricola",
+    "type": "restaurant",
+    "lat": 40.7367286,
+    "lng": 17.5802427,
+    "days": [3],
+    "url": "https://maps.app.goo.gl/rZCUTFujrJPiMS526"
+  },
+  {
+    "name": "Chiosco Luna",
+    "type": "restaurant",
+    "lat": 39.8447305,
+    "lng": 18.3862327,
+    "days": [2],
+    "url": "https://maps.app.goo.gl/Qf5GaJKzM6vfFGGa9"
+  },
+  {
+    "name": "Mivida Cafe",
+    "type": "restaurant",
+    "lat": 40.7808036,
+    "lng": 17.2419795,
+    "days": [4],
+    "url": "https://maps.app.goo.gl/igx5ZYLmFFHqcHU49"
+  },
+  {
+    "name": "Kiosk Green Cave",
+    "type": "restaurant",
+    "lat": 39.9640496,
+    "lng": 18.4044113,
+    "days": [2],
+    "url": "https://maps.app.goo.gl/dGwGLVFyUoDp9dR58"
   }
 ]
