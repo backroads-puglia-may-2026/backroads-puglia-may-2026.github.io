@@ -1,5 +1,13 @@
 [
   {
+    "src": "photos/9ecc2b5d-fc47-4300-9922-ac4345a16151.jpg",
+    "thumb": "thumbs/9ecc2b5d-fc47-4300-9922-ac4345a16151.jpg",
+    "datetime": null,
+    "lat": null,
+    "lng": null,
+    "gps_source": null
+  },
+  {
     "src": "photos/20260524_061326_536E0E.jpg",
     "thumb": "thumbs/20260524_061326_536E0E.jpg",
     "datetime": "2026-05-17T11:16:17",
@@ -90,6 +98,15 @@
     "day": 2
   },
   {
+    "src": "photos/IMG_1919.jpg",
+    "thumb": "thumbs/IMG_1919.jpg",
+    "datetime": "2026-05-18T09:51:33",
+    "lat": 40.066024999999996,
+    "lng": 18.479944444444442,
+    "gps_source": "exif",
+    "day": 2
+  },
+  {
     "src": "photos/IMG_9906.jpg",
     "thumb": "thumbs/IMG_9906.jpg",
     "datetime": "2026-05-18T10:46:34",
@@ -114,6 +131,15 @@
     "lat": 39.964039,
     "lng": 18.404561,
     "gps_source": "interpolated",
+    "day": 2
+  },
+  {
+    "src": "photos/IMG_1925.jpg",
+    "thumb": "thumbs/IMG_1925.jpg",
+    "datetime": "2026-05-18T11:28:25",
+    "lat": 39.93291388888888,
+    "lng": 18.39548611111111,
+    "gps_source": "exif",
     "day": 2
   },
   {
@@ -321,6 +347,15 @@
     "lat": 40.743229,
     "lng": 17.498572,
     "gps_source": "interpolated",
+    "day": 3
+  },
+  {
+    "src": "photos/IMG_1977.jpg",
+    "thumb": "thumbs/IMG_1977.jpg",
+    "datetime": "2026-05-19T12:04:23",
+    "lat": 40.74751388888889,
+    "lng": 17.492219444444444,
+    "gps_source": "exif",
     "day": 3
   },
   {
@@ -546,6 +581,15 @@
     "lat": null,
     "lng": null,
     "gps_source": null,
+    "day": 4
+  },
+  {
+    "src": "photos/IMG_2024.jpg",
+    "thumb": "thumbs/IMG_2024.jpg",
+    "datetime": "2026-05-20T12:54:30",
+    "lat": 40.78294722222222,
+    "lng": 17.24001388888889,
+    "gps_source": "exif",
     "day": 4
   },
   {
@@ -783,6 +827,15 @@
     "day": 5
   },
   {
+    "src": "photos/IMG_2044.jpg",
+    "thumb": "thumbs/IMG_2044.jpg",
+    "datetime": "2026-05-21T12:32:53",
+    "lat": 40.75727777777778,
+    "lng": 17.026730555555556,
+    "gps_source": "exif",
+    "day": 5
+  },
+  {
     "src": "photos/IMG_9951.jpg",
     "thumb": "thumbs/IMG_9951.jpg",
     "datetime": "2026-05-21T12:41:06",
@@ -932,6 +985,15 @@
     "datetime": "2026-05-21T21:55:12",
     "lat": 40.66556111111111,
     "lng": 16.612522222222225,
+    "gps_source": "exif",
+    "day": 5
+  },
+  {
+    "src": "photos/IMG_2073.jpg",
+    "thumb": "thumbs/IMG_2073.jpg",
+    "datetime": "2026-05-21T21:55:15",
+    "lat": 40.665480555555554,
+    "lng": 16.612547222222222,
     "gps_source": "exif",
     "day": 5
   },
