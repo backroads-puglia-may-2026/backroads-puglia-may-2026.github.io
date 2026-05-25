@@ -1,0 +1,654 @@
+---
+layout: null
+title: Backroads Puglia Bike Trip May 2026
+sitemap: false
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Backroads Puglia Bike Trip May 2026</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    :root {
+      --sidebar-w: 360px;
+      --accent: #c0392b;
+      --bg: #fafafa;
+      --text: #222;
+      --muted: #777;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
+    .app { display: flex; height: 100vh; overflow: hidden; }
+    #map { flex: 1; height: 100%; }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      flex: none;
+      height: 100%;
+      overflow-y: auto;
+      background: #fff;
+      border-left: 1px solid #e5e5e5;
+      padding: 16px;
+    }
+
+    .resizer {
+      flex: none;
+      width: 6px;
+      height: 100%;
+      cursor: ew-resize;
+      position: relative;
+      background: transparent;
+      z-index: 500;
+    }
+    .resizer::before {
+      content: '';
+      position: absolute;
+      left: 2px; right: 2px; top: 0; bottom: 0;
+      background: transparent;
+      transition: background 0.15s;
+    }
+    .resizer:hover::before, .resizer.dragging::before { background: rgba(0,0,0,0.15); }
+    .sidebar h1 { font-size: 20px; margin: 0 0 4px; }
+    .sidebar .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+    .day-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .all-toggle {
+      font-size: 12px; padding: 5px 12px; border: 1px solid #ddd; background: #fff;
+      border-radius: 999px; cursor: pointer; color: #444; align-self: flex-start;
+      margin-bottom: 4px;
+    }
+    .all-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .day-card {
+      border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px 12px; cursor: pointer;
+      background: #fff; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .day-card:hover { border-color: #ccc; }
+    .day-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .day-card .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .day-card .title { font-weight: 600; font-size: 14px; }
+    .day-card .meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .day-card .play-btn {
+      flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ddd;
+      background: #fff; color: #333; cursor: pointer; font-size: 13px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .day-card .play-btn:hover { background: #f5f5f5; }
+    .day-card.active .play-btn { border-color: var(--accent); color: var(--accent); }
+    .elevation { margin-top: 8px; }
+    .elevation svg { width: 100%; height: 70px; display: block; }
+    .elevation .readout { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; margin-top: 2px; }
+    .moving-marker {
+      width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+      border: 2.5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .photo-grid .thumb {
+      position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 4px;
+      background: #eee; cursor: pointer;
+    }
+    .photo-grid .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.2s; }
+    .photo-grid .thumb:hover img { transform: scale(1.05); }
+    .photo-grid .thumb .badge {
+      position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.6); color: #fff;
+      font-size: 10px; padding: 1px 5px; border-radius: 3px;
+    }
+    .empty { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+
+    .photo-marker {
+      width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #fff;
+      background-size: cover; background-position: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.06);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
+    .photo-marker:hover {
+      transform: scale(1.18);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.08);
+    }
+    .photo-dot {
+      width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+      transition: transform 0.15s ease;
+      cursor: pointer;
+    }
+    .photo-dot:hover { transform: scale(1.6); }
+
+    /* Polish Leaflet's default chrome */
+    .leaflet-container { background: #eef2f4; font: inherit; }
+    .leaflet-control-zoom a {
+      background: rgba(255,255,255,0.95); color: #333; border: none !important;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .leaflet-control-zoom a:first-child { border-radius: 6px 6px 0 0 !important; }
+    .leaflet-control-zoom a:last-child  { border-radius: 0 0 6px 6px !important; }
+    .leaflet-control-attribution {
+      background: rgba(255,255,255,0.75) !important; backdrop-filter: blur(4px);
+      font-size: 10px !important; padding: 2px 6px !important; border-radius: 3px;
+    }
+    .leaflet-control-scale-line {
+      background: rgba(255,255,255,0.75); border-color: rgba(0,0,0,0.4) !important;
+      font-size: 10px; padding: 0 4px;
+    }
+
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none;
+      align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    }
+    .modal.open { display: flex; }
+    .modal img { max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 4px; }
+    .modal .caption {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      color: #fff; font-size: 14px; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 4px;
+      max-width: 80vw; text-align: center;
+    }
+    .modal .close {
+      position: absolute; top: 16px; right: 20px; color: #fff; font-size: 32px; cursor: pointer;
+      background: none; border: none; line-height: 1;
+    }
+    .modal .nav {
+      position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 40px;
+      cursor: pointer; background: none; border: none; padding: 0 20px; user-select: none;
+    }
+    .modal .nav.prev { left: 0; }
+    .modal .nav.next { right: 0; }
+
+    @media (max-width: 768px) {
+      .app { flex-direction: column; }
+      #map { height: 50vh; }
+      .sidebar { width: 100% !important; height: 50vh; border-left: none; border-top: 1px solid #e5e5e5; }
+      .resizer { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="map"></div>
+    <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
+    <aside class="sidebar">
+      <h1>Backroads Puglia Bike Trip May 2026</h1>
+      <p class="subtitle" id="trip-subtitle">Loading…</p>
+      <button class="all-toggle active" id="all-toggle">All days</button>
+      <div class="day-list" id="day-list"></div>
+      <div class="photo-grid" id="photo-grid"></div>
+    </aside>
+  </div>
+
+  <div class="modal" id="modal">
+    <button class="close" id="modal-close" aria-label="Close">&times;</button>
+    <button class="nav prev" id="modal-prev" aria-label="Previous">&#8249;</button>
+    <img id="modal-img" alt="">
+    <button class="nav next" id="modal-next" aria-label="Next">&#8250;</button>
+    <div class="caption" id="modal-caption"></div>
+  </div>
+
+  <script>
+  // ---------------------------------------------------------------------------
+  // CONFIG: change this once your photos are uploaded to S3.
+  // Set to '' (empty string) to use local paths from photos.json as-is.
+  // Set to e.g. 'https://jgracie.s3.us-east-2.amazonaws.com/italy/' to prefix
+  // every photo URL with this base.
+  // ---------------------------------------------------------------------------
+  const PHOTO_BASE_URL = 'https://jgracie.s3.us-east-2.amazonaws.com/italy-bike-trip/';
+
+  const DAY_COLORS = ['#e63946', '#1d7fbf', '#2a9d8f', '#9b5de5', '#f4a261', '#06a77d', '#577590', '#bc4749'];
+
+  const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([43.5, 11.5], 7);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  L.control.scale({ position: 'bottomleft', imperial: false, maxWidth: 120 }).addTo(map);
+  L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
+
+  // Clean, minimal basemap — Carto Voyager has subtle terrain shading that
+  // looks great with bike routes; Positron is the strictly-minimal alternative.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd',
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }).addTo(map);
+
+  let routesLayer = L.layerGroup().addTo(map);
+  let markersLayer = L.layerGroup().addTo(map);
+  let allPhotos = [];
+  let allRoutes = null;
+  let activeDay = 'all';
+  let currentPhotoIndex = 0;
+  let visiblePhotos = [];
+  let dayGroups = [];        // per-day aggregated route info
+  let animMarker = null;     // Leaflet marker that follows the route during playback
+  let animRAF = null;        // requestAnimationFrame handle
+  let animState = null;      // { day, startedAt, duration, paused, pausedProgress }
+
+  const resolveUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return PHOTO_BASE_URL + path;
+  };
+
+  async function loadData() {
+    const [routesRes, photosRes] = await Promise.all([
+      fetch('data/routes.json').catch(() => null),
+      fetch('data/photos.json').catch(() => null)
+    ]);
+    allRoutes = routesRes && routesRes.ok ? await routesRes.json() : { type: 'FeatureCollection', features: [] };
+    allPhotos = photosRes && photosRes.ok ? await photosRes.json() : [];
+
+    dayGroups = buildDayGroups(allRoutes);
+    buildDayList();
+    render();
+    fitMapToData();
+  }
+
+  // ---- Day aggregation -------------------------------------------------------
+  function haversineKm(a, b) {
+    const R = 6371, toRad = x => x * Math.PI / 180;
+    const dlon = toRad(b[0] - a[0]), dlat = toRad(b[1] - a[1]);
+    const h = Math.sin(dlat/2)**2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dlon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  function buildDayGroups(geojson) {
+    const groups = {};
+    for (const f of (geojson.features || [])) {
+      const d = f.properties && f.properties.day;
+      if (d == null) continue;
+      (groups[d] ||= []).push(f);
+    }
+    return Object.entries(groups).map(([day, features]) => {
+      features.sort((a, b) =>
+        ((a.properties.start_time || '') + a.properties.name).localeCompare((b.properties.start_time || '') + b.properties.name)
+      );
+      const coords = [];
+      for (const f of features) for (const c of f.geometry.coordinates) coords.push(c);
+
+      const cumDist = [0];
+      for (let i = 1; i < coords.length; i++) {
+        cumDist.push(cumDist[i-1] + haversineKm(coords[i-1], coords[i]));
+      }
+      const eles = coords.map(c => c[2]).filter(e => e != null);
+      const ascent = features.reduce((s, f) => s + (f.properties.ascent_m || 0), 0);
+      return {
+        day: Number(day),
+        date: features[0].properties.date,
+        features, coords, cumDist,
+        totalDist: cumDist[cumDist.length - 1] || 0,
+        eleMin: eles.length ? Math.min(...eles) : null,
+        eleMax: eles.length ? Math.max(...eles) : null,
+        ascent
+      };
+    }).sort((a, b) => a.day - b.day);
+  }
+
+  // ---- Sidebar ---------------------------------------------------------------
+  function buildDayList() {
+    const list = document.getElementById('day-list');
+    list.innerHTML = '';
+    dayGroups.forEach(g => {
+      const card = document.createElement('div');
+      card.className = 'day-card';
+      card.dataset.day = String(g.day);
+      const dateLabel = g.date ? new Date(g.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : '';
+      card.innerHTML = `
+        <div class="row">
+          <div>
+            <div class="title">Day ${g.day}</div>
+            <div class="meta">${dateLabel} · ${g.totalDist.toFixed(1)} km · &uarr; ${Math.round(g.ascent)} m</div>
+          </div>
+          <button class="play-btn" data-action="play" aria-label="Play day ${g.day}">&#9654;</button>
+        </div>
+        <div class="elevation" style="display:none">
+          <svg viewBox="0 0 400 70" preserveAspectRatio="none"></svg>
+          <div class="readout"><span class="dist-readout"></span><span class="ele-readout"></span></div>
+        </div>
+      `;
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.play-btn')) return;
+        setActiveDay(g.day);
+      });
+      card.querySelector('.play-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (animState && animState.day === g.day) {
+          if (animState.paused) resumeAnimation();
+          else pauseAnimation();
+        } else {
+          if (activeDay !== g.day) setActiveDay(g.day);
+          startAnimation(g.day);
+        }
+      });
+      list.appendChild(card);
+    });
+
+    document.getElementById('all-toggle').onclick = () => setActiveDay('all');
+
+    const days = dayGroups.length;
+    const km = dayGroups.reduce((s, g) => s + g.totalDist, 0);
+    document.getElementById('trip-subtitle').textContent =
+      `${days} day${days === 1 ? '' : 's'} · ${km.toFixed(0)} km`;
+  }
+
+  function setActiveDay(day) {
+    stopAnimation();
+    activeDay = day === 'all' ? 'all' : Number(day);
+    render();
+    fitMapToData();
+  }
+
+  function render() {
+    document.getElementById('all-toggle').classList.toggle('active', activeDay === 'all');
+    document.querySelectorAll('.day-card').forEach(card => {
+      const isActive = Number(card.dataset.day) === activeDay;
+      card.classList.toggle('active', isActive);
+      const ele = card.querySelector('.elevation');
+      ele.style.display = isActive ? '' : 'none';
+      if (isActive) drawElevationChart(card, Number(card.dataset.day), null);
+    });
+
+    routesLayer.clearLayers();
+    markersLayer.clearLayers();
+
+    const overview = activeDay === 'all';
+    const features = (allRoutes.features || []).filter(f =>
+      overview || (f.properties && f.properties.day === activeDay)
+    );
+    // Thicker, more saturated routes in overview mode so they read across the whole map
+    const mainWeight = overview ? 5 : 4;
+    const caseWeight = overview ? 9 : 7;
+    features.forEach((f) => {
+      const color = DAY_COLORS[((f.properties.day || 1) - 1) % DAY_COLORS.length];
+      L.geoJSON(f, { style: { color: '#ffffff', weight: caseWeight, opacity: 0.9, lineCap: 'round', lineJoin: 'round' } }).addTo(routesLayer);
+      L.geoJSON(f, { style: { color, weight: mainWeight, opacity: 0.95, lineCap: 'round', lineJoin: 'round' } }).addTo(routesLayer);
+    });
+
+    visiblePhotos = allPhotos.filter(p => overview || p.day === activeDay);
+    visiblePhotos.forEach((photo, idx) => {
+      if (photo.lat == null || photo.lng == null) return;
+      const color = DAY_COLORS[((photo.day || 1) - 1) % DAY_COLORS.length];
+      let icon;
+      if (overview) {
+        // Small colored dot so routes stay legible
+        icon = L.divIcon({
+          className: '',
+          html: `<div class="photo-dot" style="background:${color}"></div>`,
+          iconSize: [10, 10], iconAnchor: [5, 5]
+        });
+      } else {
+        icon = L.divIcon({
+          className: '',
+          html: `<div class="photo-marker" style="background-image:url('${resolveUrl(photo.thumb || photo.src)}')"></div>`,
+          iconSize: [30, 30], iconAnchor: [15, 15]
+        });
+      }
+      const marker = L.marker([photo.lat, photo.lng], { icon });
+      marker.on('click', () => openModal(idx));
+      marker.addTo(markersLayer);
+    });
+
+    renderGrid();
+  }
+
+  // ---- Elevation chart -------------------------------------------------------
+  function drawElevationChart(card, day, progress) {
+    const g = dayGroups.find(x => x.day === day);
+    if (!g || g.eleMin == null) return;
+    const svg = card.querySelector('svg');
+    const W = 400, H = 70, pad = 4;
+
+    // Sample down to ~200 points for a smooth-but-cheap path
+    const N = Math.min(200, g.coords.length);
+    const pts = [];
+    for (let i = 0; i < N; i++) {
+      const idx = Math.round(i * (g.coords.length - 1) / (N - 1));
+      const x = pad + (g.cumDist[idx] / g.totalDist) * (W - 2 * pad);
+      const ele = g.coords[idx][2] != null ? g.coords[idx][2] : g.eleMin;
+      const y = H - pad - ((ele - g.eleMin) / Math.max(1, g.eleMax - g.eleMin)) * (H - 2 * pad);
+      pts.push([x, y]);
+    }
+    const color = DAY_COLORS[(g.day - 1) % DAY_COLORS.length];
+    const linePath = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const areaPath = linePath + ` L${pts[pts.length-1][0].toFixed(1)},${H} L${pts[0][0].toFixed(1)},${H} Z`;
+
+    let cursor = '';
+    let distLabel = '', eleLabel = '';
+    if (progress != null) {
+      const cx = pad + progress * (W - 2 * pad);
+      cursor = `<line x1="${cx}" y1="0" x2="${cx}" y2="${H}" stroke="${color}" stroke-width="1.5" />`;
+      const pos = positionAt(g, progress);
+      distLabel = `${pos.distKm.toFixed(1)} / ${g.totalDist.toFixed(1)} km`;
+      eleLabel = pos.ele != null ? `${Math.round(pos.ele)} m` : '';
+    } else {
+      distLabel = `${g.totalDist.toFixed(1)} km`;
+      eleLabel = `${Math.round(g.eleMin)}–${Math.round(g.eleMax)} m`;
+    }
+    svg.innerHTML = `
+      <path d="${areaPath}" fill="${color}" fill-opacity="0.15" />
+      <path d="${linePath}" fill="none" stroke="${color}" stroke-width="1.5" />
+      ${cursor}
+    `;
+    card.querySelector('.dist-readout').textContent = distLabel;
+    card.querySelector('.ele-readout').textContent = eleLabel;
+  }
+
+  // ---- Position along route --------------------------------------------------
+  function positionAt(group, progress) {
+    const target = progress * group.totalDist;
+    let lo = 0, hi = group.cumDist.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (group.cumDist[mid] < target) lo = mid + 1; else hi = mid;
+    }
+    const i = Math.max(1, lo);
+    const seg = group.cumDist[i] - group.cumDist[i-1];
+    const t = seg > 0 ? (target - group.cumDist[i-1]) / seg : 0;
+    const a = group.coords[i-1], b = group.coords[i];
+    return {
+      lng: a[0] + (b[0] - a[0]) * t,
+      lat: a[1] + (b[1] - a[1]) * t,
+      ele: (a[2] != null && b[2] != null) ? a[2] + (b[2] - a[2]) * t : null,
+      distKm: target
+    };
+  }
+
+  // ---- Animation -------------------------------------------------------------
+  function startAnimation(day) {
+    stopAnimation();
+    const g = dayGroups.find(x => x.day === day);
+    if (!g || g.coords.length < 2) return;
+    // ~250ms per km, clamped to [10s, 30s]
+    const duration = Math.max(10000, Math.min(30000, g.totalDist * 250));
+    animState = { day, startedAt: performance.now(), duration, paused: false };
+
+    const color = DAY_COLORS[(g.day - 1) % DAY_COLORS.length];
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="moving-marker" style="background:${color}"></div>`,
+      iconSize: [16, 16], iconAnchor: [8, 8]
+    });
+    animMarker = L.marker(positionAt(g, 0).lat ? [g.coords[0][1], g.coords[0][0]] : [0, 0], { icon, zIndexOffset: 1000 }).addTo(map);
+    setPlayButton(g.day, true);
+    tick();
+  }
+
+  function tick() {
+    if (!animState) return;
+    const g = dayGroups.find(x => x.day === animState.day);
+    if (!g) { stopAnimation(); return; }
+    const elapsed = performance.now() - animState.startedAt;
+    const progress = Math.min(1, elapsed / animState.duration);
+    const pos = positionAt(g, progress);
+    if (animMarker) animMarker.setLatLng([pos.lat, pos.lng]);
+
+    const card = document.querySelector(`.day-card[data-day="${g.day}"]`);
+    if (card) drawElevationChart(card, g.day, progress);
+
+    if (progress >= 1) {
+      // leave the marker at the end for a moment then clean up
+      setPlayButton(g.day, false);
+      animState = null;
+      animRAF = null;
+      return;
+    }
+    animRAF = requestAnimationFrame(tick);
+  }
+
+  function pauseAnimation() {
+    if (!animState) return;
+    const elapsed = performance.now() - animState.startedAt;
+    animState.pausedProgress = Math.min(1, elapsed / animState.duration);
+    animState.paused = true;
+    if (animRAF) cancelAnimationFrame(animRAF);
+    animRAF = null;
+    setPlayButton(animState.day, false);
+  }
+
+  function resumeAnimation() {
+    if (!animState || !animState.paused) return;
+    animState.startedAt = performance.now() - animState.pausedProgress * animState.duration;
+    animState.paused = false;
+    setPlayButton(animState.day, true);
+    tick();
+  }
+
+  function stopAnimation() {
+    if (animRAF) cancelAnimationFrame(animRAF);
+    animRAF = null;
+    if (animMarker) { map.removeLayer(animMarker); animMarker = null; }
+    if (animState) setPlayButton(animState.day, false);
+    animState = null;
+  }
+
+  function setPlayButton(day, playing) {
+    const card = document.querySelector(`.day-card[data-day="${day}"]`);
+    if (!card) return;
+    const btn = card.querySelector('.play-btn');
+    btn.innerHTML = playing ? '&#10073;&#10073;' : '&#9654;';
+    btn.setAttribute('aria-label', playing ? `Pause day ${day}` : `Play day ${day}`);
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('photo-grid');
+    grid.innerHTML = '';
+    if (visiblePhotos.length === 0) {
+      grid.innerHTML = '<div class="empty">No photos yet.</div>';
+      return;
+    }
+    visiblePhotos.forEach((photo, idx) => {
+      const el = document.createElement('div');
+      el.className = 'thumb';
+      el.innerHTML =
+        `<img loading="lazy" src="${resolveUrl(photo.thumb || photo.src)}" alt="">` +
+        (photo.day ? `<span class="badge">Day ${photo.day}</span>` : '');
+      el.addEventListener('click', () => {
+        openModal(idx);
+        if (photo.lat != null && photo.lng != null) {
+          map.flyTo([photo.lat, photo.lng], Math.max(map.getZoom(), 13), { duration: 0.6 });
+        }
+      });
+      grid.appendChild(el);
+    });
+  }
+
+  function fitMapToData() {
+    const bounds = L.latLngBounds([]);
+    visiblePhotos.forEach(p => { if (p.lat != null && p.lng != null) bounds.extend([p.lat, p.lng]); });
+    (allRoutes.features || [])
+      .filter(f => activeDay === 'all' || (f.properties && f.properties.day === activeDay))
+      .forEach(f => {
+        const coords = (f.geometry && f.geometry.coordinates) || [];
+        coords.forEach(c => bounds.extend([c[1], c[0]]));
+      });
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
+  }
+
+  // ---- Modal -----------------------------------------------------------------
+  function openModal(idx) {
+    currentPhotoIndex = idx;
+    showCurrent();
+    document.getElementById('modal').classList.add('open');
+  }
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+  function showCurrent() {
+    const p = visiblePhotos[currentPhotoIndex];
+    if (!p) return;
+    document.getElementById('modal-img').src = resolveUrl(p.src);
+    const parts = [];
+    if (p.day) parts.push('Day ' + p.day);
+    if (p.datetime) parts.push(new Date(p.datetime).toLocaleString());
+    if (p.caption) parts.push(p.caption);
+    document.getElementById('modal-caption').textContent = parts.join(' · ');
+  }
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal').addEventListener('click', (e) => {
+    if (e.target.id === 'modal') closeModal();
+  });
+  document.getElementById('modal-prev').addEventListener('click', () => {
+    currentPhotoIndex = (currentPhotoIndex - 1 + visiblePhotos.length) % visiblePhotos.length;
+    showCurrent();
+  });
+  document.getElementById('modal-next').addEventListener('click', () => {
+    currentPhotoIndex = (currentPhotoIndex + 1) % visiblePhotos.length;
+    showCurrent();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('modal').classList.contains('open')) return;
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'ArrowLeft') document.getElementById('modal-prev').click();
+    if (e.key === 'ArrowRight') document.getElementById('modal-next').click();
+  });
+
+  // ---- Sidebar resizing ------------------------------------------------------
+  (function setupResizer() {
+    const resizer = document.getElementById('resizer');
+    const sidebar = document.querySelector('.sidebar');
+    if (!resizer || !sidebar) return;
+    const MIN = 240, MAX = 720, KEY = 'italy-trip-sidebar-w';
+
+    const saved = parseInt(localStorage.getItem(KEY), 10);
+    if (saved && saved >= MIN && saved <= MAX) sidebar.style.width = saved + 'px';
+
+    let startX = 0, startW = 0, rafPending = false;
+
+    function onMove(e) {
+      const dx = startX - e.clientX;   // drag left = positive = grow sidebar
+      const newW = Math.min(MAX, Math.max(MIN, startW + dx));
+      sidebar.style.width = newW + 'px';
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => { rafPending = false; map.invalidateSize(); });
+      }
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      resizer.classList.remove('dragging');
+      document.body.style.userSelect = '';
+      const w = parseInt(sidebar.style.width, 10);
+      if (w) localStorage.setItem(KEY, String(w));
+      map.invalidateSize();
+    }
+    resizer.addEventListener('mousedown', (e) => {
+      if (window.innerWidth <= 768) return;   // mobile: stacked layout, no horizontal resize
+      startX = e.clientX;
+      startW = sidebar.getBoundingClientRect().width;
+      resizer.classList.add('dragging');
+      document.body.style.userSelect = 'none';
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+    // Double-click to reset to default width
+    resizer.addEventListener('dblclick', () => {
+      sidebar.style.width = '';
+      localStorage.removeItem(KEY);
+      map.invalidateSize();
+    });
+  })();
+
+  loadData();
+  </script>
+</body>
+</html>
