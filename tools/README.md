@@ -140,6 +140,10 @@ or kept somewhere alongside the input photos.
 - **Photo has no GPS and didn't match a track point.** Most likely a
   restaurant, hotel, or post-ride photo. It appears in the sidebar grid but
   has no map marker. To force a location, hand-edit `photos.json`.
+- **Photo with EXIF stripped (e.g. shared via Google Photos / WhatsApp web).**
+  The script falls back to a sibling `<stem>.xmp` sidecar file if present, and
+  pulls the datetime from `photoshop:DateCreated`. XMP timezone offsets are
+  honored and converted to `--photo-tz` so day numbering stays consistent.
 - **Filename collisions** (two phones produced `IMG_1234.HEIC`). The script
   warns and renames the second one to `IMG_1234__1.jpg` in the output.
 - **Friend's photo on wrong timezone.** Re-run with `--photo-tz +01:00` (or
